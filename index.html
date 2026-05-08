@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة الألعاب والمشاريع | Ali Taye</title>
+    
+    <!-- خطوط جوجل (Cairo) لدعم اللغة العربية بشكل جميل -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- مكتبة أيقونات Phosphor -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- إعدادات Tailwind لتخصيص الخط والألوان -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        dark: '#0f172a',
+                        darker: '#020617',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* تأثيرات إضافية للخلفية والأنيميشن */
+        body {
+            background-color: #020617;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(225,39%,30%,0.2) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsla(339,49%,30%,0.2) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(30, 41, 59, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col items-center selection:bg-indigo-500 selection:text-white">
+
+    <!-- مساحة علوية للزينة -->
+    <div class="absolute top-[-150px] left-1/2 transform -translate-x-1/2 w-[600px] h-[300px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none"></div>
+
+    <!-- الرأس (Header) -->
+    <header class="w-full max-w-6xl mx-auto px-6 pt-16 pb-12 text-center relative z-10">
+        <div class="inline-block mb-4 p-2 bg-slate-800/50 rounded-2xl border border-slate-700/50 backdrop-blur-sm">
+            <i class="ph-duotone ph-game-controller text-4xl text-indigo-400"></i>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
+            مجموعة <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">الألعاب والمشاريع</span>
+        </h1>
+        <p class="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            مجموعة من المشاريع التفاعلية والألعاب المصغرة المبنية باستخدام تقنيات الويب الأساسية (HTML, CSS, JS). 
+        </p>
+    </header>
+
+    <!-- شبكة المشاريع (Grid) -->
+    <main class="w-full max-w-6xl mx-auto px-6 pb-20 relative z-10 flex-grow">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+
+          <!-- محاكي الأسهم -->
+            <a href="./Stock-Simulator/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-green-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-trend-up text-3xl text-green-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-green-400 transition-colors">محاكي الأسهم</h2>
+                <p class="text-sm text-slate-400">جرب التداول والاستثمار في بيئة محاكاة افتراضية.</p>
+            </a>
+
+            <!-- خمن بالرموز -->
+            <a href="./Guess-by-Emojis/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-yellow-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-smiley-wink text-3xl text-yellow-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-yellow-400 transition-colors">خمن بالرموز</h2>
+                <p class="text-sm text-slate-400">اختبر معرفتك وحاول تخمين الكلمة من خلال الإيموجي.</p>
+            </a>
+
+            <!-- الجدول الدوري -->
+            <a href="./Periodic-Table/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-flask text-3xl text-emerald-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-emerald-400 transition-colors">الجدول الدوري</h2>
+                <p class="text-sm text-slate-400">واجهة تفاعلية لاستكشاف عناصر الجدول الدوري.</p>
+            </a>
+
+            <!-- بينج بونج -->
+            <a href="./PingPong/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-orange-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-table-tennis text-3xl text-orange-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-orange-400 transition-colors">بينج بونج</h2>
+                <p class="text-sm text-slate-400">لعبة تنس الطاولة الكلاسيكية بنسخة الويب.</p>
+            </a>
+
+            <!-- معركة النيون -->
+            <a href="./NeonBattle/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center lg:col-span-2 xl:col-span-2 border-fuchsia-500/30">
+                <div class="w-16 h-16 rounded-2xl bg-fuchsia-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-crosshair text-3xl text-fuchsia-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-fuchsia-400 transition-colors">Neon Battle</h2>
+                <p class="text-sm text-slate-400">لعبة معركة بصرية رائعة بتأثيرات النيون الجذابة.</p>
+            </a>
+
+           <!-- لعبة 4 في صف -->
+            <a href="./4in-A-Row-Game/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-circles-four text-3xl text-red-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-red-400 transition-colors">أربعة في صف</h2>
+                <p class="text-sm text-slate-400">لعبة الذكاء الكلاسيكية، حاول صف 4 أقراص قبل خصمك.</p>
+            </a>
+
+          <!-- لعبة اختبار سرعة الكتابة -->
+            <a href="./SpeedWritingTest/index.html" class="glass-card rounded-2xl p-6 transition-all duration-300 transform hover:-translate-y-2 group flex flex-col items-center text-center">
+                <div class="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <i class="ph-duotone ph-keyboard text-3xl text-blue-400"></i>
+                </div>
+                <h2 class="text-xl font-bold mb-2 text-slate-100 group-hover:text-blue-400 transition-colors">اختبار سرعة الكتابة</h2>
+                <p class="text-sm text-slate-400">اختبر سرعتك ودقتك في الكتابة على الكيبورد.</p>
+            </a>
+
+        </div>
+    </main>
+
+    <!-- الفوتر -->
+    <footer class="w-full border-t border-slate-800/60 py-6 text-center text-slate-500 text-sm mt-auto backdrop-blur-md bg-slate-900/30">
+        <p>تم التطوير بواسطة <span class="text-slate-300 font-semibold">Ali Taye</span> &copy; <script>document.write(new Date().getFullYear())</script></p>
+        <div class="flex justify-center gap-4 mt-3">
+            <a href="https://github.com/AliTaye" target="_blank" class="hover:text-indigo-400 transition-colors">
+                <i class="ph-fill ph-github-logo text-2xl"></i>
+            </a>
+        </div>
+    </footer>
+
+</body>
+</html>
