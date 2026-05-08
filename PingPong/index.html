@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة تنس الطاولة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            background-color: #0f172a; 
+            overflow: hidden; 
+            touch-action: none; /* لمنع تحديث الصفحة عند السحب في الجوال */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        #gameCanvas { 
+            background-color: #1e293b; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.6); 
+            border-radius: 12px; 
+            border: 2px solid #334155;
+            display: block;
+            width: 100%; /* عشان تتجاوب مع الجوالات */
+            height: auto;
+            aspect-ratio: 3 / 2;
+        }
+
+        /* تنسيقات مناطق اللمس للجوال */
+        .touch-zone {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            color: rgba(255, 255, 255, 0.05);
+            transition: background-color 0.1s, color 0.1s;
+            user-select: none;
+        }
+        .touch-zone:active {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+    </style>
+</head>
+<body class="h-screen w-screen flex flex-col items-center justify-center text-white p-2">
+    
+    <!-- لوحة النتيجة -->
+    <div class="flex justify-between w-full max-w-[600px] px-6 py-3 font-black text-2xl bg-slate-800 rounded-t-xl border-b-4 border-slate-900 z-10">
+        <!-- الأزرق على اليمين في الشاشة لأن الصفحة تدعم القراءة من اليمين لليسار -->
+        <div class="text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] flex items-center gap-2">
+            <span>الأزرق:</span> <span id="score2" class="text-3xl transition-transform">0</span>
+        </div>
+        <!-- الأحمر على اليسار -->
+        <div class="text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] flex items-center gap-2">
+            <span id="score1" class="text-3xl transition-transform">0</span> <span>:الأحمر</span>
+        </div>
+    </div>
+
+    <!-- منطقة اللعب -->
+    <div class="relative w-full max-w-[600px] flex justify-center" dir="ltr">
+        <!-- أبعاد اللوحة صارت عرضية 600 عرض 400 طول -->
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+
+        <!-- أزرار اللمس الشفافة للجوال -->
+        <div class="absolute inset-0 z-0 sm:hidden pointer-events-auto flex">
+            <!-- نصف اللاعب 1 (الأحمر / يسار) -->
+            <div class="flex flex-col w-1/2 h-full border-r-2 border-dashed border-white/10">
+                <div class="h-1/2 w-full touch-zone border-b border-white/5" id="zone-p1-up">⬆️</div>
+                <div class="h-1/2 w-full touch-zone" id="zone-p1-down">⬇️</div>
+            </div>
+            <!-- نصف اللاعب 2 (الأزرق / يمين) -->
+            <div class="flex flex-col w-1/2 h-full">
+                <div class="h-1/2 w-full touch-zone border-b border-white/5" id="zone-p2-up">⬆️</div>
+                <div class="h-1/2 w-full touch-zone" id="zone-p2-down">⬇️</div>
+            </div>
+        </div>
+        
+        <!-- شاشة البداية -->
+        <div id="startScreen" class="absolute inset-0 bg-slate-900 bg-opacity-90 flex flex-col items-center justify-center rounded-[12px] z-20 backdrop-blur-sm">
+            <h1 class="text-5xl font-black mb-10 pb-4 text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-white to-blue-500 neon-text">
+                تنس الطاولة 🏓
+            </h1>
+            
+            <div class="bg-slate-800 p-5 rounded-xl border border-slate-700 text-center text-base space-y-4 mb-8 w-4/5 shadow-lg overflow-y-auto max-h-[60%]">
+                <p class="text-gray-300 font-bold text-lg mb-2">طريقة اللعب:</p>
+                <div class="flex justify-between text-red-400 items-center">
+                    <span class="font-bold">الأحمر (يسار):</span>
+                    <span class="bg-slate-700 px-3 py-1 rounded">W و S</span>
+                </div>
+                <div class="flex justify-between text-blue-400 items-center">
+                    <span class="font-bold">الأزرق (يمين):</span>
+                    <span class="bg-slate-700 px-3 py-1 rounded">الأسهم ⬆️ ⬇️</span>
+                </div>
+                <div class="text-right text-sm text-gray-300 border-t border-slate-700 pt-3">
+                    <p class="text-yellow-400 font-bold mb-1">🔥 قدرات خاصة (المسها بالمضرب):</p>
+                    <p>🍄 <b>تكبير:</b> المضرب يصير أطول.</p>
+                    <p>🧲 <b>مغناطيس:</b> تمسك الكرة، اضغط سبيس لتطلقها.</p>
+                    <p>🎱 <b>وهم:</b> تطلع كرة ثانية شفافة تضيع الخصم.</p>
+                </div>
+                <p class="text-sm text-yellow-400 mt-4 border-t border-slate-700 pt-3">
+                    ملاحظة: اللعب يوقف بعد كل هدف، اضغط (Space) لتكمل!
+                </p>
+                <p class="text-xs text-gray-500 mt-1">في الجوال: المس الأطراف للتحكم وبدء الجولة.</p>
+            </div>
+
+            <button id="startBtn" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-3 px-12 rounded-full text-2xl shadow-[0_0_20px_rgba(16,185,129,0.5)] transition duration-200 transform hover:scale-105">
+                ابدأ التحدي 🔥
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const startBtn = document.getElementById('startBtn');
+        const score1El = document.getElementById('score1');
+        const score2El = document.getElementById('score2');
+
+        let isPlaying = false;
+        let isWaitingForSpace = true; // متغير جديد لإيقاف اللعب
+        let bounces = 0; // لعد الارتدادات وزيادة السرعة واللون
+        let serveSpeed = 5; // السرعة البطيئة لأول ضربة (الإرسال)
+        let baseSpeed = 8.5; // السرعة الأساسية السريعة بعد أول ضربة
+        let nextServer = 1; // من يبدأ الإرسال
+
+        // إعدادات الكائنات (صارت عرضية)
+        const paddleWidth = 15;
+        const paddleHeight = 80;
+        const ballRadius = 8;
+        
+        let paddle1 = { x: 20, y: canvas.height/2 - paddleHeight/2, height: paddleHeight, score: 0, speed: 8.5, canCatch: false, caughtBall: false, offsetY: 0 };
+        let paddle2 = { x: canvas.width - 20 - paddleWidth, y: canvas.height/2 - paddleHeight/2, height: paddleHeight, score: 0, speed: 8.5, canCatch: false, caughtBall: false, offsetY: 0 };
+        let ball = { x: canvas.width/2, y: canvas.height/2, dx: 0, dy: 0 };
+
+        // القدرات الخاصة
+        let powerups = [];
+        let fakeBalls = [];
+        const POWERUP_TYPES = ['enlarge', 'catch', 'multiball'];
+
+        // الأزرار الجديدة
+        const keys = { w: false, s: false, ArrowUp: false, ArrowDown: false };
+
+        // دالة لتشغيل الجولة بعد الإيقاف
+        const handleStartRound = () => {
+            // إطلاق الكرة في حال كانت ممسوكة
+            if (paddle1.caughtBall) {
+                paddle1.caughtBall = false;
+                let speed = baseSpeed + bounces * 0.5 + 2;
+                let hitPoint = (ball.y - (paddle1.y + paddle1.height/2)) / (paddle1.height/2);
+                ball.dx = Math.cos(hitPoint * Math.PI/4) * speed;
+                ball.dy = Math.sin(hitPoint * Math.PI/4) * speed;
+                return;
+            }
+            if (paddle2.caughtBall) {
+                paddle2.caughtBall = false;
+                let speed = baseSpeed + bounces * 0.5 + 2;
+                let hitPoint = (ball.y - (paddle2.y + paddle2.height/2)) / (paddle2.height/2);
+                ball.dx = -Math.cos(hitPoint * Math.PI/4) * speed;
+                ball.dy = Math.sin(hitPoint * Math.PI/4) * speed;
+                return;
+            }
+
+            if (isWaitingForSpace && isPlaying) {
+                isWaitingForSpace = false;
+                bounces = 0; // تصفير الارتدادات
+                powerups = []; // تنظيف القدرات
+                fakeBalls = []; // تنظيف الكرات الوهمية
+                
+                // توجيه الكرة لمرمى مسجل الهدف (إرسال بطيء)
+                let dir = nextServer === 1 ? -1 : 1;
+                ball.dx = dir * serveSpeed;
+                // زاوية عشوائية خفيفة
+                ball.dy = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 2 + 1);
+            }
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if(e.key === 'w' || e.key === 'W') keys.w = true;
+            if(e.key === 's' || e.key === 'S') keys.s = true;
+            if(e.key === 'ArrowUp') keys.ArrowUp = true;
+            if(e.key === 'ArrowDown') keys.ArrowDown = true;
+            if(e.code === 'Space') handleStartRound(); // زر المسافة يبدأ الجولة
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if(e.key === 'w' || e.key === 'W') keys.w = false;
+            if(e.key === 's' || e.key === 'S') keys.s = false;
+            if(e.key === 'ArrowUp') keys.ArrowUp = false;
+            if(e.key === 'ArrowDown') keys.ArrowDown = false;
+        });
+
+        // إعدادات اللمس للجوال
+        const attachTouch = (id, keyName) => {
+            const el = document.getElementById(id);
+            if(!el) return;
+            el.addEventListener('touchstart', (e) => { 
+                e.preventDefault(); 
+                keys[keyName] = true; 
+                handleStartRound(); // اللمس يبدأ الجولة كمان
+            });
+            el.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+            el.addEventListener('touchcancel', (e) => { e.preventDefault(); keys[keyName] = false; });
+        };
+
+        // ربط أزرار اللمس بالاتجاهات الجديدة
+        attachTouch('zone-p1-up', 'w');
+        attachTouch('zone-p1-down', 's');
+        attachTouch('zone-p2-up', 'ArrowUp');
+        attachTouch('zone-p2-down', 'ArrowDown');
+
+        function resetBall(scorer) {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = 0; // إيقاف الكرة
+            ball.dy = 0;
+            isWaitingForSpace = true; // ننتظر ضغطة سبيس
+            if (scorer) nextServer = scorer; // الكرة تتجه لمرمى اللي سجل الهدف
+
+            // تصفير قدرات المضارب
+            paddle1.caughtBall = false;
+            paddle2.caughtBall = false;
+            paddle1.canCatch = false;
+            paddle2.canCatch = false;
+            paddle1.height = paddleHeight;
+            paddle2.height = paddleHeight;
+        }
+
+        function update() {
+            // تحديث حركة الكرات الممسوكة
+            if (paddle1.caughtBall) {
+                ball.y = paddle1.y + ball.offsetY;
+                ball.x = paddle1.x + paddleWidth + ballRadius;
+            } else if (paddle2.caughtBall) {
+                ball.y = paddle2.y + ball.offsetY;
+                ball.x = paddle2.x - ballRadius;
+            }
+
+            // إذا كنا ننتظر ضغطة سبيس، لا تحسب حركة الكرة العادية
+            if (isWaitingForSpace) return;
+
+            // حركة المضارب
+            if (keys.w && paddle1.y > 0) paddle1.y -= paddle1.speed;
+            if (keys.s && paddle1.y + paddle1.height < canvas.height) paddle1.y += paddle1.speed;
+            
+            if (keys.ArrowUp && paddle2.y > 0) paddle2.y -= paddle2.speed;
+            if (keys.ArrowDown && paddle2.y + paddle2.height < canvas.height) paddle2.y += paddle2.speed;
+
+            // ظهور القدرات الخاصة عشوائياً
+            if (Math.random() < 0.003 && powerups.length < 2) {
+                powerups.push({
+                    x: canvas.width / 2,
+                    y: Math.random() * (canvas.height - 40) + 20,
+                    dx: (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 0.5),
+                    dy: (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 1.5 + 0.5),
+                    type: POWERUP_TYPES[Math.floor(Math.random() * POWERUP_TYPES.length)],
+                    radius: 15,
+                    life: 900 // مدة البقاء
+                });
+            }
+
+            // تحديث القدرات الخاصة (حركتها واصطدامها بالمضارب)
+            for (let i = powerups.length - 1; i >= 0; i--) {
+                let p = powerups[i];
+                p.x += p.dx;
+                p.y += p.dy;
+                p.life--;
+
+                // ارتداد القدرات من الجدران العلوية والسفلية والجانبية
+                if (p.y - p.radius < 0 || p.y + p.radius > canvas.height) p.dy *= -1;
+                if (p.x - p.radius < 0 || p.x + p.radius > canvas.width) p.dx *= -1;
+
+                // التحقق من اصطدام القدرة بالمضارب لتفعيلها
+                let hitPaddle = null;
+                if (p.x - p.radius < paddle1.x + paddleWidth && p.x + p.radius > paddle1.x && 
+                    p.y + p.radius > paddle1.y && p.y - p.radius < paddle1.y + paddle1.height) hitPaddle = paddle1;
+                else if (p.x + p.radius > paddle2.x && p.x - p.radius < paddle2.x + paddleWidth && 
+                    p.y + p.radius > paddle2.y && p.y - p.radius < paddle2.y + paddle2.height) hitPaddle = paddle2;
+
+                if (hitPaddle) {
+                    if (p.type === 'enlarge') {
+                        hitPaddle.height = paddleHeight * 1.6;
+                        setTimeout(() => hitPaddle.height = paddleHeight, 10000); // ترجع بعد 10 ثواني
+                    } else if (p.type === 'catch') {
+                        hitPaddle.canCatch = true;
+                    } else if (p.type === 'multiball') {
+                        // كورة وهمية تنطلق بعكس اتجاه الكرة الحالية تقريباً
+                        fakeBalls.push({
+                            x: ball.x, y: ball.y,
+                            dx: ball.dx, dy: -ball.dy,
+                            active: true
+                        });
+                    }
+                    powerups.splice(i, 1);
+                } else if (p.life <= 0) {
+                    powerups.splice(i, 1);
+                }
+            }
+
+            // تحديث الكرات الوهمية
+            for (let i = fakeBalls.length - 1; i >= 0; i--) {
+                let fb = fakeBalls[i];
+                if (!fb.active) { fakeBalls.splice(i, 1); continue; }
+                
+                fb.x += fb.dx;
+                fb.y += fb.dy;
+
+                // ارتداد الكرات الوهمية من الجدران
+                if (fb.y - ballRadius < 0) { fb.y = ballRadius; fb.dy *= -1; }
+                else if (fb.y + ballRadius > canvas.height) { fb.y = canvas.height - ballRadius; fb.dy *= -1; }
+
+                // تخرج من الملعب بدون تسجيل هدف
+                if (fb.x < 0 || fb.x > canvas.width) {
+                    fb.active = false;
+                }
+
+                // ارتداد الكرات الوهمية من المضارب
+                if (fb.x - ballRadius < paddle1.x + paddleWidth && fb.x + ballRadius > paddle1.x && 
+                    fb.y > paddle1.y && fb.y < paddle1.y + paddle1.height) {
+                    fb.x = paddle1.x + paddleWidth + ballRadius;
+                    let currentSpeed = Math.sqrt(fb.dx*fb.dx + fb.dy*fb.dy);
+                    let hitPoint = (fb.y - (paddle1.y + paddle1.height/2)) / (paddle1.height/2);
+                    fb.dx = Math.cos(hitPoint * Math.PI/4) * currentSpeed;
+                    fb.dy = Math.sin(hitPoint * Math.PI/4) * currentSpeed;
+                }
+                
+                if (fb.x + ballRadius > paddle2.x && fb.x - ballRadius < paddle2.x + paddleWidth && 
+                    fb.y > paddle2.y && fb.y < paddle2.y + paddle2.height) {
+                    fb.x = paddle2.x - ballRadius;
+                    let currentSpeed = Math.sqrt(fb.dx*fb.dx + fb.dy*fb.dy);
+                    let hitPoint = (fb.y - (paddle2.y + paddle2.height/2)) / (paddle2.height/2);
+                    fb.dx = -Math.cos(hitPoint * Math.PI/4) * currentSpeed;
+                    fb.dy = Math.sin(hitPoint * Math.PI/4) * currentSpeed;
+                }
+            }
+
+            // حركة الكرة
+            if (!paddle1.caughtBall && !paddle2.caughtBall) {
+                ball.x += ball.dx;
+                ball.y += ball.dy;
+            }
+
+            // الاصطدام بالجدران العلوية والسفلية
+            if (ball.y - ballRadius < 0) {
+                ball.y = ballRadius;
+                ball.dy *= -1;
+            } else if (ball.y + ballRadius > canvas.height) {
+                ball.y = canvas.height - ballRadius;
+                ball.dy *= -1;
+            }
+
+            // الاصطدام بمضرب اللاعب 1 (الأحمر / يسار)
+            if (!paddle1.caughtBall && !paddle2.caughtBall && 
+                ball.x - ballRadius < paddle1.x + paddleWidth && 
+                ball.x + ballRadius > paddle1.x && 
+                ball.y > paddle1.y && 
+                ball.y < paddle1.y + paddle1.height) {
+                
+                if (paddle1.canCatch) {
+                    paddle1.caughtBall = true;
+                    paddle1.canCatch = false; // تستهلك القدرة
+                    ball.x = paddle1.x + paddleWidth + ballRadius;
+                    ball.dx = 0; ball.dy = 0;
+                    ball.offsetY = ball.y - paddle1.y;
+                } else {
+                    ball.x = paddle1.x + paddleWidth + ballRadius; // إبعاد الكرة عشان ما تعلق جوا المضرب
+                    bounces++; // زيادة الارتدادات
+                    
+                    // حساب السرعة والزاوية الجديدة
+                    let currentSpeed = baseSpeed + (bounces * 0.5);
+                    let hitPoint = (ball.y - (paddle1.y + paddle1.height/2)) / (paddle1.height/2);
+                    let angle = hitPoint * Math.PI/4; // زاوية الارتداد
+                    
+                    ball.dx = Math.cos(angle) * currentSpeed;
+                    ball.dy = Math.sin(angle) * currentSpeed;
+                }
+            }
+
+            // الاصطدام بمضرب اللاعب 2 (الأزرق / يمين)
+            if (!paddle1.caughtBall && !paddle2.caughtBall && 
+                ball.x + ballRadius > paddle2.x && 
+                ball.x - ballRadius < paddle2.x + paddleWidth && 
+                ball.y > paddle2.y && 
+                ball.y < paddle2.y + paddle2.height) {
+                
+                if (paddle2.canCatch) {
+                    paddle2.caughtBall = true;
+                    paddle2.canCatch = false;
+                    ball.x = paddle2.x - ballRadius;
+                    ball.dx = 0; ball.dy = 0;
+                    ball.offsetY = ball.y - paddle2.y;
+                } else {
+                    ball.x = paddle2.x - ballRadius;
+                    bounces++;
+                    
+                    let currentSpeed = baseSpeed + (bounces * 0.5);
+                    let hitPoint = (ball.y - (paddle2.y + paddle2.height/2)) / (paddle2.height/2);
+                    let angle = hitPoint * Math.PI/4;
+                    
+                    ball.dx = -Math.cos(angle) * currentSpeed;
+                    ball.dy = Math.sin(angle) * currentSpeed;
+                }
+            }
+
+            // تسجيل الأهداف (الكرة تخرج يمين أو يسار)
+            if (ball.x < 0) {
+                paddle2.score++;
+                score2El.textContent = paddle2.score;
+                score2El.classList.add('scale-150', 'text-white');
+                setTimeout(() => score2El.classList.remove('scale-150', 'text-white'), 300);
+                resetBall(2);
+            } else if (ball.x > canvas.width) {
+                paddle1.score++;
+                score1El.textContent = paddle1.score;
+                score1El.classList.add('scale-150', 'text-white');
+                setTimeout(() => score1El.classList.remove('scale-150', 'text-white'), 300);
+                resetBall(1);
+            }
+        }
+
+        function draw() {
+            // مسح الشاشة
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // خط المنتصف (صار عمودي)
+            ctx.setLineDash([15, 15]);
+            ctx.beginPath();
+            ctx.moveTo(canvas.width/2, 0);
+            ctx.lineTo(canvas.width/2, canvas.height);
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // المضرب 1 (أحمر / يسار)
+            ctx.fillStyle = paddle1.canCatch ? '#f59e0b' : '#ef4444'; // يتغير لونه لو معاه مغناطيس
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = paddle1.canCatch ? '#f59e0b' : '#ef4444';
+            ctx.beginPath();
+            ctx.roundRect(paddle1.x, paddle1.y, paddleWidth, paddle1.height, 5);
+            ctx.fill();
+
+            // المضرب 2 (أزرق / يمين)
+            ctx.fillStyle = paddle2.canCatch ? '#f59e0b' : '#3b82f6';
+            ctx.shadowColor = paddle2.canCatch ? '#f59e0b' : '#3b82f6';
+            ctx.beginPath();
+            ctx.roundRect(paddle2.x, paddle2.y, paddleWidth, paddle2.height, 5);
+            ctx.fill();
+
+            // رسم القدرات الخاصة
+            ctx.font = '24px "Segoe UI", Tahoma';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (let p of powerups) {
+                // تومض قبل لا تختفي
+                if (p.life < 150 && Math.floor(p.life / 10) % 2 === 0) continue; 
+                let icon = p.type === 'enlarge' ? '🍄' : p.type === 'catch' ? '🧲' : '🎱';
+                ctx.fillText(icon, p.x, p.y);
+            }
+
+            // رسم الكرات الوهمية
+            for (let fb of fakeBalls) {
+                if (!fb.active) continue;
+                ctx.beginPath();
+                ctx.arc(fb.x, fb.y, ballRadius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(14, 165, 233, 0.4)'; // لون سماوي شفاف للكرة الوهمية
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = 'rgba(14, 165, 233, 0.6)';
+                ctx.fill();
+                ctx.closePath();
+            }
+
+            // الكرة
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI * 2);
+            
+            // حساب لون الكرة (تصير حمراء أكثر كل ما زادت الارتدادات)
+            let gb = Math.max(0, 255 - bounces * 15); // يقلل الأخضر والأزرق عشان يبقى الأحمر بس
+            ctx.fillStyle = `rgb(255, ${gb}, ${gb})`;
+            ctx.shadowBlur = 12 + bounces; // التوهج يزيد
+            ctx.shadowColor = `rgb(255, ${gb}, ${gb})`;
+            
+            ctx.fill();
+            ctx.closePath();
+            
+            ctx.shadowBlur = 0; // إلغاء الظل
+
+            // رسم رسالة التوقف (اضغط مسافة)
+            if (isWaitingForSpace) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height); // تظليل خفيف
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 28px "Segoe UI", Tahoma';
+                ctx.textAlign = 'center';
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = '#000';
+                ctx.fillText('اضغط المسافة (Space) للبدء', canvas.width / 2, canvas.height / 2 - 10);
+                
+                ctx.font = '16px "Segoe UI", Tahoma';
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillText('أو المس الشاشة إذا كنت تلعب من الجوال', canvas.width / 2, canvas.height / 2 + 30);
+                ctx.shadowBlur = 0;
+            }
+        }
+
+        function loop() {
+            if (!isPlaying) return;
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        startBtn.addEventListener('click', () => {
+            startScreen.classList.add('hidden');
+            isPlaying = true;
+            resetBall(1);
+            loop();
+        });
+    </script>
+</body>
+</html>
